@@ -1,5 +1,7 @@
 import json
+import os
 import random
+import subprocess
 from argparse import Namespace
 from pathlib import Path
 
@@ -11,6 +13,7 @@ from caelestia.utils.hypr import message
 from caelestia.utils.material import get_colours_for_image
 from caelestia.utils.paths import (
     compute_hash,
+    user_config_path,
     wallpaper_link_path,
     wallpaper_path_path,
     wallpaper_thumbnail_path,
@@ -157,6 +160,18 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
     # Update colours
     scheme.update_colours()
     apply_colours(scheme.colours, scheme.mode)
+
+    # Execute post hook if configured
+    try:
+        config = json.loads(user_config_path.read_text())
+        if "wallpaper" in config and "postHook" in config["wallpaper"]:
+            hook_cmd = config["wallpaper"]["postHook"]
+            # Replace $WALLPAPER_PATH with the actual wallpaper path
+            env = os.environ.copy()
+            env["WALLPAPER_PATH"] = str(wall)
+            subprocess.Popen(hook_cmd, shell=True, env=env, start_new_session=True)
+    except (json.JSONDecodeError, FileNotFoundError, KeyError):
+        pass
 
 
 def set_random(args: Namespace) -> None:
