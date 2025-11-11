@@ -51,12 +51,7 @@ def get_wallpapers(args: Namespace) -> list[Path]:
         return walls
 
     monitors = message("monitors")
-    filter_size = monitors[0]["width"], monitors[0]["height"]
-    for monitor in monitors[1:]:
-        if filter_size[0] > monitor["width"]:
-            filter_size[0] = monitor["width"]
-        if filter_size[1] > monitor["height"]:
-            filter_size[1] = monitor["height"]
+    filter_size = min(m["width"] for m in monitors), min(m["height"] for m in monitors)
 
     return [f for f in walls if check_wall(f, filter_size, args.threshold)]
 
@@ -161,16 +156,17 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
     scheme.update_colours()
     apply_colours(scheme.colours, scheme.mode)
 
-    # Execute post hook if configured
+    # Run custom post-hook if configured
     try:
-        config = json.loads(user_config_path.read_text())
-        if "wallpaper" in config and "postHook" in config["wallpaper"]:
-            hook_cmd = config["wallpaper"]["postHook"]
-            # Replace $WALLPAPER_PATH with the actual wallpaper path
-            env = os.environ.copy()
-            env["WALLPAPER_PATH"] = str(wall)
-            subprocess.Popen(hook_cmd, shell=True, env=env, start_new_session=True)
-    except (json.JSONDecodeError, FileNotFoundError, KeyError):
+        cfg = json.loads(user_config_path.read_text()).get("wallpaper", {})
+        if post_hook := cfg.get("postHook"):
+            subprocess.run(
+                post_hook,
+                shell=True,
+                env={**os.environ, "WALLPAPER_PATH": str(wall)},
+                stderr=subprocess.DEVNULL,
+            )
+    except (FileNotFoundError, json.JSONDecodeError):
         pass
 
 
