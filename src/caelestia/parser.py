@@ -97,6 +97,7 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     wallpaper_parser.add_argument(
         "-t",
         "--threshold",
+        type=float,
         default=0.8,
         help="the minimum percentage of the largest monitor size the image must be greater than to be selected",
     )
