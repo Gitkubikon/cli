@@ -1,0 +1,404 @@
+{
+  "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
+  "name": "Caelestia",
+  "author": "Caelestia Theme System",
+  "themes": [
+    {
+      "name": "Caelestia",
+      "appearance": "dark",
+      "style": {
+        "border": "{{ $surfaceContainerHigh }}",
+        "border.variant": "{{ $surfaceContainer }}",
+        "border.focused": "{{ $primary }}",
+        "border.selected": "{{ $primaryContainer }}",
+        "border.transparent": "#00000000",
+        "border.disabled": "{{ $surfaceVariant }}",
+        "elevated_surface.background": "{{ $surfaceBright }}",
+        "surface.background": "{{ $surface }}",
+        "background": "{{ $background }}",
+        "element.background": "{{ $surfaceContainerLow }}",
+        "element.hover": "{{ $surfaceContainer }}",
+        "element.active": "{{ $surfaceContainerHigh }}",
+        "element.selected": "{{ $surfaceContainerHigh }}",
+        "element.disabled": "{{ $surfaceContainerLow }}",
+        "drop_target.background": "{{ $primary }}80",
+        "ghost_element.background": "#00000000",
+        "ghost_element.hover": "{{ $surfaceContainer }}",
+        "ghost_element.active": "{{ $surfaceContainerHigh }}",
+        "ghost_element.selected": "{{ $surfaceContainerHigh }}",
+        "ghost_element.disabled": "{{ $surfaceContainerLow }}",
+        "text": "{{ $onBackground }}",
+        "text.muted": "{{ $onSurfaceVariant }}",
+        "text.placeholder": "{{ $outline }}",
+        "text.disabled": "{{ $outline }}",
+        "text.accent": "{{ $primary }}",
+        "icon": "{{ $onSurface }}",
+        "icon.muted": "{{ $onSurfaceVariant }}",
+        "icon.disabled": "{{ $outline }}",
+        "icon.placeholder": "{{ $onSurfaceVariant }}",
+        "icon.accent": "{{ $primary }}",
+        "status_bar.background": "{{ $background }}",
+        "title_bar.background": "{{ $background }}",
+        "title_bar.inactive_background": "{{ $surfaceContainerLow }}",
+        "toolbar.background": "{{ $surfaceDim }}",
+        "tab_bar.background": "{{ $surface }}",
+        "tab.inactive_background": "{{ $surface }}",
+        "tab.active_background": "{{ $surfaceDim }}",
+        "search.match_background": "{{ $primary }}66",
+        "search.active_match_background": "{{ $secondary }}66",
+        "panel.background": "{{ $surface }}",
+        "panel.focused_border": null,
+        "pane.focused_border": null,
+        "scrollbar.thumb.background": "{{ $onSurface }}4c",
+        "scrollbar.thumb.hover_background": "{{ $surfaceContainer }}",
+        "scrollbar.thumb.border": "{{ $surfaceContainer }}",
+        "scrollbar.track.background": "#00000000",
+        "scrollbar.track.border": "{{ $surfaceContainerLow }}",
+        "editor.foreground": "{{ $onSurface }}",
+        "editor.background": "{{ $surfaceDim }}",
+        "editor.gutter.background": "{{ $surfaceDim }}",
+        "editor.subheader.background": "{{ $surface }}",
+        "editor.active_line.background": "{{ $surface }}bf",
+        "editor.highlighted_line.background": "{{ $surface }}",
+        "editor.line_number": "{{ $outline }}",
+        "editor.active_line_number": "{{ $onSurface }}",
+        "editor.hover_line_number": "{{ $onSurfaceVariant }}",
+        "editor.invisible": "{{ $outline }}",
+        "editor.wrap_guide": "{{ $onSurface }}0d",
+        "editor.active_wrap_guide": "{{ $onSurface }}1a",
+        "editor.indent_guide": "{{ $surfaceContainerHigh }}",
+        "editor.indent_guide_active": "{{ $surfaceContainerHighest }}",
+        "editor.document_highlight.read_background": "{{ $primary }}1a",
+        "editor.document_highlight.write_background": "{{ $secondary }}1a",
+        "editor.document_highlight.bracket_background": "{{ $tertiary }}1a",
+        "terminal.background": "{{ $surfaceDim }}",
+        "terminal.foreground": "{{ $onBackground }}",
+        "terminal.bright_foreground": "{{ $onBackground }}",
+        "terminal.dim_foreground": "{{ $onSurfaceVariant }}",
+        "terminal.ansi.black": "{{ $term0 }}",
+        "terminal.ansi.bright_black": "{{ $term8 }}",
+        "terminal.ansi.dim_black": "{{ $term0 }}",
+        "terminal.ansi.red": "{{ $term1 }}",
+        "terminal.ansi.bright_red": "{{ $term9 }}",
+        "terminal.ansi.dim_red": "{{ $term1 }}",
+        "terminal.ansi.green": "{{ $term2 }}",
+        "terminal.ansi.bright_green": "{{ $term10 }}",
+        "terminal.ansi.dim_green": "{{ $term2 }}",
+        "terminal.ansi.yellow": "{{ $term3 }}",
+        "terminal.ansi.bright_yellow": "{{ $term11 }}",
+        "terminal.ansi.dim_yellow": "{{ $term3 }}",
+        "terminal.ansi.blue": "{{ $term4 }}",
+        "terminal.ansi.bright_blue": "{{ $term12 }}",
+        "terminal.ansi.dim_blue": "{{ $term4 }}",
+        "terminal.ansi.magenta": "{{ $term5 }}",
+        "terminal.ansi.bright_magenta": "{{ $term13 }}",
+        "terminal.ansi.dim_magenta": "{{ $term5 }}",
+        "terminal.ansi.cyan": "{{ $term6 }}",
+        "terminal.ansi.bright_cyan": "{{ $term14 }}",
+        "terminal.ansi.dim_cyan": "{{ $term6 }}",
+        "terminal.ansi.white": "{{ $term7 }}",
+        "terminal.ansi.bright_white": "{{ $term15 }}",
+        "terminal.ansi.dim_white": "{{ $term7 }}",
+        "link_text.hover": "{{ $primary }}",
+        "version_control.added": "{{ $term2 }}",
+        "version_control.modified": "{{ $term3 }}",
+        "version_control.word_added": "{{ $term2 }}59",
+        "version_control.word_deleted": "{{ $term1 }}cc",
+        "version_control.deleted": "{{ $term1 }}",
+        "version_control.conflict_marker.ours": "{{ $term2 }}1a",
+        "version_control.conflict_marker.theirs": "{{ $term4 }}1a",
+        "conflict": "{{ $term3 }}",
+        "conflict.background": "{{ $term3 }}1a",
+        "conflict.border": "{{ $term3 }}80",
+        "created": "{{ $term2 }}",
+        "created.background": "{{ $term2 }}1a",
+        "created.border": "{{ $term2 }}80",
+        "deleted": "{{ $term1 }}",
+        "deleted.background": "{{ $term1 }}1a",
+        "deleted.border": "{{ $term1 }}80",
+        "error": "{{ $error }}",
+        "error.background": "{{ $errorContainer }}",
+        "error.border": "{{ $onErrorContainer }}",
+        "hidden": "{{ $outline }}",
+        "hidden.background": "{{ $surfaceVariant }}1a",
+        "hidden.border": "{{ $surfaceContainerHigh }}",
+        "hint": "{{ $tertiary }}",
+        "hint.background": "{{ $tertiaryContainer }}",
+        "hint.border": "{{ $onTertiaryContainer }}",
+        "ignored": "{{ $outline }}",
+        "ignored.background": "{{ $surfaceVariant }}1a",
+        "ignored.border": "{{ $surfaceContainerHigh }}",
+        "info": "{{ $primary }}",
+        "info.background": "{{ $primaryContainer }}",
+        "info.border": "{{ $onPrimaryContainer }}",
+        "modified": "{{ $term3 }}",
+        "modified.background": "{{ $term3 }}1a",
+        "modified.border": "{{ $term3 }}80",
+        "predictive": "{{ $secondary }}",
+        "predictive.background": "{{ $secondaryContainer }}",
+        "predictive.border": "{{ $onSecondaryContainer }}",
+        "renamed": "{{ $primary }}",
+        "renamed.background": "{{ $primaryContainer }}",
+        "renamed.border": "{{ $onPrimaryContainer }}",
+        "success": "{{ $term2 }}",
+        "success.background": "{{ $term2 }}1a",
+        "success.border": "{{ $term2 }}80",
+        "unreachable": "{{ $onSurfaceVariant }}",
+        "unreachable.background": "{{ $surfaceVariant }}1a",
+        "unreachable.border": "{{ $surfaceContainerHigh }}",
+        "warning": "{{ $term3 }}",
+        "warning.background": "{{ $term3 }}1a",
+        "warning.border": "{{ $term3 }}80",
+        "players": [
+          {
+            "cursor": "{{ $primary }}",
+            "background": "{{ $primary }}",
+            "selection": "{{ $primary }}3d"
+          },
+          {
+            "cursor": "{{ $term1 }}",
+            "background": "{{ $term1 }}",
+            "selection": "{{ $term1 }}3d"
+          },
+          {
+            "cursor": "{{ $term3 }}",
+            "background": "{{ $term3 }}",
+            "selection": "{{ $term3 }}3d"
+          },
+          {
+            "cursor": "{{ $term5 }}",
+            "background": "{{ $term5 }}",
+            "selection": "{{ $term5 }}3d"
+          },
+          {
+            "cursor": "{{ $term6 }}",
+            "background": "{{ $term6 }}",
+            "selection": "{{ $term6 }}3d"
+          },
+          {
+            "cursor": "{{ $term9 }}",
+            "background": "{{ $term9 }}",
+            "selection": "{{ $term9 }}3d"
+          },
+          {
+            "cursor": "{{ $secondary }}",
+            "background": "{{ $secondary }}",
+            "selection": "{{ $secondary }}3d"
+          },
+          {
+            "cursor": "{{ $tertiary }}",
+            "background": "{{ $tertiary }}",
+            "selection": "{{ $tertiary }}3d"
+          }
+        ],
+        "syntax": {
+          "attribute": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "boolean": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "comment": {
+            "color": "{{ $outline }}",
+            "font_style": "italic",
+            "font_weight": null
+          },
+          "comment.doc": {
+            "color": "{{ $onSurfaceVariant }}",
+            "font_style": "italic",
+            "font_weight": null
+          },
+          "constant": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "constructor": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "embedded": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "emphasis": {
+            "color": "{{ $primary }}",
+            "font_style": "italic",
+            "font_weight": null
+          },
+          "emphasis.strong": {
+            "color": "{{ $primary }}",
+            "font_style": null,
+            "font_weight": 700
+          },
+          "enum": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "function": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "function.method": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "function.definition": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "hint": {
+            "color": "{{ $tertiary }}",
+            "font_style": null,
+            "font_weight": 700
+          },
+          "keyword": {
+            "color": "{{ $term13 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "label": {
+            "color": "{{ $primary }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "link_text": {
+            "color": "{{ $primary }}",
+            "font_style": "italic",
+            "font_weight": null
+          },
+          "link_uri": {
+            "color": "{{ $term14 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "number": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "operator": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "predictive": {
+            "color": "{{ $secondary }}",
+            "font_style": "italic",
+            "font_weight": null
+          },
+          "preproc": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "primary": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "property": {
+            "color": "{{ $term9 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "punctuation": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "punctuation.bracket": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "punctuation.delimiter": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "punctuation.list_marker": {
+            "color": "{{ $term9 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "punctuation.special": {
+            "color": "{{ $term13 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "string": {
+            "color": "{{ $term10 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "string.escape": {
+            "color": "{{ $term14 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "string.regex": {
+            "color": "{{ $term14 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "string.special": {
+            "color": "{{ $term14 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "string.special.symbol": {
+            "color": "{{ $term10 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "tag": {
+            "color": "{{ $term12 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "text.literal": {
+            "color": "{{ $term10 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "title": {
+            "color": "{{ $primary }}",
+            "font_style": null,
+            "font_weight": 700
+          },
+          "type": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "variable": {
+            "color": "{{ $onSurface }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "variable.special": {
+            "color": "{{ $term13 }}",
+            "font_style": null,
+            "font_weight": null
+          },
+          "variant": {
+            "color": "{{ $term11 }}",
+            "font_style": null,
+            "font_weight": null
+          }
+        }
+      }
+    }
+  ]
+}
