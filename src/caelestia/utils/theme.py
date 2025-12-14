@@ -224,6 +224,12 @@ def apply_cava(colours: dict[str, str]) -> None:
 
 
 @log_exception
+def apply_zed(colours: dict[str, str]) -> None:
+    template = gen_replace(colours, templates_dir / "zed.json", hash=True)
+    write_file(config_dir / "zed/themes/caelestia.json", template)
+
+
+@log_exception
 def apply_user_templates(colours: dict[str, str]) -> None:
     if not user_templates_dir.is_dir():
         return
@@ -267,4 +273,6 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
         apply_warp(colours, mode)
     if check("enableCava"):
         apply_cava(colours)
+    if check("enableZed"):
+        apply_zed(colours)
     apply_user_templates(colours)
