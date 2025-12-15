@@ -1,6 +1,18 @@
 import argparse
 
-from caelestia.subcommands import clipboard, clicktodo, emoji, record, resizer, scheme, screenshot, shell, toggle, wallpaper
+from caelestia.subcommands import (
+    calendar,
+    clicktodo,
+    clipboard,
+    emoji,
+    record,
+    resizer,
+    scheme,
+    screenshot,
+    shell,
+    toggle,
+    wallpaper,
+)
 from caelestia.utils.paths import wallpapers_dir
 from caelestia.utils.scheme import get_scheme_names, scheme_variants
 from caelestia.utils.wallpaper import get_wallpaper
@@ -24,6 +36,13 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     shell_parser.add_argument("-l", "--log", action="store_true", help="print the shell log")
     shell_parser.add_argument("-k", "--kill", action="store_true", help="kill the shell")
     shell_parser.add_argument("--log-rules", metavar="RULES", help="log rules to apply")
+
+    # Create parser for calendar opts
+    calendar_parser = command_parser.add_parser("calendar", help="list calendar events (via khal)")
+    calendar_parser.set_defaults(cls=calendar.Command)
+    calendar_parser.add_argument("-d", "--days", type=int, default=7, help="number of days to list (default: 7)")
+    calendar_parser.add_argument("-s", "--start", metavar="YYYY-MM-DD", help="start date (default: today)")
+    calendar_parser.add_argument("--json", action="store_true", help="output events as JSON")
 
     # Create parser for toggle opts
     toggle_parser = command_parser.add_parser("toggle", help="toggle a special workspace")
@@ -131,7 +150,9 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     # Create parser for clicktodo (OCR click-to-copy) opts
     clicktodo_parser = command_parser.add_parser("clicktodo", help="OCR-based click-to-copy from screen")
     clicktodo_parser.set_defaults(cls=clicktodo.Command)
-    clicktodo_parser.add_argument("-f", "--fast", action="store_true", help="enable fast mode with aggressive optimizations")
+    clicktodo_parser.add_argument(
+        "-f", "--fast", action="store_true", help="enable fast mode with aggressive optimizations"
+    )
     clicktodo_parser.add_argument("--debug", action="store_true", help="show verbose debug output for troubleshooting")
     clicktodo_parser.add_argument(
         "--live",
