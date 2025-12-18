@@ -230,6 +230,12 @@ def apply_zed(colours: dict[str, str]) -> None:
 
 
 @log_exception
+def apply_zellij(colours: dict[str, str]) -> None:
+    template = gen_replace(colours, templates_dir / "zellij.kdl")
+    write_file(config_dir / "zellij/themes/caelestia.kdl", template)
+
+
+@log_exception
 def apply_user_templates(colours: dict[str, str]) -> None:
     if not user_templates_dir.is_dir():
         return
@@ -275,4 +281,6 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
         apply_cava(colours)
     if check("enableZed"):
         apply_zed(colours)
+    if check("enableZellij"):
+        apply_zellij(colours)
     apply_user_templates(colours)

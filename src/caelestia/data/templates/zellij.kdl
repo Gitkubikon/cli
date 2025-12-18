@@ -1,0 +1,132 @@
+themes {
+    caelestia {
+        fg "#{{ $onSurface }}"
+        bg "#{{ $background }}"
+        black "#{{ $term0 }}"
+        red "#{{ $term1 }}"
+        green "#{{ $term2 }}"
+        yellow "#{{ $term3 }}"
+        blue "#{{ $term4 }}"
+        magenta "#{{ $term5 }}"
+        cyan "#{{ $term6 }}"
+        white "#{{ $term7 }}"
+        orange "#{{ $tertiary }}"
+        
+        text_unselected {
+            base "#{{ $onSurfaceVariant }}"
+            background "#{{ $background }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        text_selected {
+            base "#{{ $onSecondaryContainer }}"
+            background "#{{ $secondaryContainer }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        ribbon_unselected {
+            base "#{{ $onSurfaceVariant }}"
+            background "#{{ $surface }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        ribbon_selected {
+            base "#{{ $onPrimary }}"
+            background "#{{ $primary }}"
+            emphasis_0 "#{{ $onPrimary }}"
+            emphasis_1 "#{{ $onPrimary }}"
+            emphasis_2 "#{{ $onPrimary }}"
+            emphasis_3 "#{{ $onPrimary }}"
+        }
+        table_title {
+            base "#{{ $onSurface }}"
+            background "#{{ $surface }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        table_cell_unselected {
+            base "#{{ $onSurface }}"
+            background "#{{ $background }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        table_cell_selected {
+            base "#{{ $onSecondaryContainer }}"
+            background "#{{ $secondaryContainer }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        list_unselected {
+            base "#{{ $onSurface }}"
+            background "#{{ $background }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        list_selected {
+            base "#{{ $onSecondaryContainer }}"
+            background "#{{ $secondaryContainer }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $secondary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $term5 }}"
+        }
+        frame_selected {
+            base "#{{ $primary }}"
+            background "#{{ $primary }}"
+            emphasis_0 "#{{ $primary }}"
+            emphasis_1 "#{{ $primary }}"
+            emphasis_2 "#{{ $primary }}"
+            emphasis_3 "#{{ $primary }}"
+        }
+        frame_highlight {
+            base "#{{ $tertiary }}"
+            background "#{{ $tertiaryContainer }}"
+            emphasis_0 "#{{ $tertiary }}"
+            emphasis_1 "#{{ $tertiary }}"
+            emphasis_2 "#{{ $tertiary }}"
+            emphasis_3 "#{{ $tertiary }}"
+        }
+        exit_code_success {
+            base "#{{ $term2 }}"
+            background "#{{ $background }}"
+            emphasis_0 "#{{ $term2 }}"
+            emphasis_1 "#{{ $term2 }}"
+            emphasis_2 "#{{ $term2 }}"
+            emphasis_3 "#{{ $term2 }}"
+        }
+        exit_code_error {
+            base "#{{ $term1 }}"
+            background "#{{ $background }}"
+            emphasis_0 "#{{ $term1 }}"
+            emphasis_1 "#{{ $term1 }}"
+            emphasis_2 "#{{ $term1 }}"
+            emphasis_3 "#{{ $term1 }}"
+        }
+        multiplayer_user_colors {
+            player_1 "#{{ $term1 }}"
+            player_2 "#{{ $term2 }}"
+            player_3 "#{{ $term3 }}"
+            player_4 "#{{ $term4 }}"
+            player_5 "#{{ $term5 }}"
+            player_6 "#{{ $term6 }}"
+            player_7 "#{{ $secondary }}"
+            player_8 "#{{ $tertiary }}"
+            player_9 "#{{ $term9 }}"
+            player_10 "#{{ $term10 }}"
+        }
+    }
+}
