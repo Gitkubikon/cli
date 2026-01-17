@@ -33,12 +33,12 @@ class Command:
     def region(self) -> None:
         if self.args.region == "slurp":
             subprocess.run(
-                ["qs", "-c", "caelestia", "ipc", "call", "picker", "openFreeze" if self.args.freeze else "open"]
+                ["caelestia", "shell", "picker", "openFreeze" if self.args.freeze else "open"]
             )
         else:
             grim_geometry = self._convert_geometry_to_grim_format(self.args.region.strip())
             sc_data = subprocess.check_output(["grim", "-l", "0", "-g", grim_geometry, "-"])
-            
+
             # Copy to clipboard
             subprocess.run(["wl-copy"], input=sc_data)
 

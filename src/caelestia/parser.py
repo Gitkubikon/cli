@@ -11,6 +11,7 @@ from caelestia.subcommands import (
     screenshot,
     shell,
     toggle,
+    vpn,
     wallpaper,
 )
 from caelestia.utils.paths import wallpapers_dir
@@ -159,5 +160,10 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         action="store_true",
         help="stream OCR results as they are recognized",
     )
+
+    # Create parser for vpn opts
+    vpn_parser = command_parser.add_parser("vpn", help="manage VPN connections")
+    vpn_parser.set_defaults(cls=vpn.Command)
+    vpn_parser.add_argument("-d", "--disconnect", action="store_true", help="disconnect from VPN")
 
     return parser, parser.parse_args()

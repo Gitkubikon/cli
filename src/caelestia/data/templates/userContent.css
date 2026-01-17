@@ -1,0 +1,430 @@
+/* ==========================================================================
+   Zen Browser - Developer Tools Theme Override
+   Theme: Catppuccin Mocha (Developer Vibes Edition v2 - Pills & Tech)
+   Author: Antigravity
+   ========================================================================== */
+
+/* 1. Global Variables & Color Palette (Catppuccin Mocha) */
+:root {
+    /* Base Colors */
+    --zen-dev-base: {{ $base }};
+    --zen-dev-mantle: {{ $mantle }};
+    --zen-dev-crust: {{ $crust }};
+
+    /* Surfaces */
+    --zen-dev-surface0: {{ $surface0 }};
+    --zen-dev-surface1: {{ $surface1 }};
+    --zen-dev-surface2: {{ $surface2 }};
+
+    /* Text */
+    --zen-dev-text: {{ $text }};
+    --zen-dev-subtext0: {{ $subtext0 }};
+    --zen-dev-subtext1: {{ $subtext1 }};
+
+    /* Accents */
+    --zen-dev-blue: {{ $blue }};
+    --zen-dev-lavender: {{ $lavender }};
+    --zen-dev-sapphire: {{ $sapphire }};
+    --zen-dev-sky: {{ $sky }};
+    --zen-dev-teal: {{ $teal }};
+    --zen-dev-green: {{ $green }};
+    --zen-dev-yellow: {{ $yellow }};
+    --zen-dev-peach: {{ $peach }};
+    --zen-dev-maroon: {{ $maroon }};
+    --zen-dev-red: {{ $red }};
+    --zen-dev-mauve: {{ $mauve }};
+    --zen-dev-pink: {{ $pink }};
+    --zen-dev-flamingo: {{ $flamingo }};
+    --zen-dev-rosewater: {{ $rosewater }};
+
+    /* UI Variables Overrides */
+    --theme-body-background: var(--zen-dev-base) !important;
+    --theme-sidebar-background: var(--zen-dev-mantle) !important;
+    --theme-tab-toolbar-background: var(--zen-dev-crust) !important;
+    --theme-toolbar-background: var(--zen-dev-crust) !important;
+    --theme-selection-background: var(--zen-dev-surface2) !important;
+    /* Brighter selection */
+    --theme-selection-color: var(--zen-dev-base) !important;
+    /* Dark text on selection */
+    --theme-splitter-color: var(--zen-dev-surface0) !important;
+    --theme-comment: var(--zen-dev-surface2) !important;
+
+    /* Syntax Highlighting Props */
+    --theme-highlight-green: var(--zen-dev-green) !important;
+    --theme-highlight-blue: var(--zen-dev-blue) !important;
+    --theme-highlight-purple: var(--zen-dev-mauve) !important;
+    --theme-highlight-red: var(--zen-dev-red) !important;
+    --theme-highlight-yellow: var(--zen-dev-yellow) !important;
+    --theme-highlight-gray: var(--zen-dev-subtext0) !important;
+
+    /* Layout */
+    --zen-dev-radius-sm: 4px;
+    --zen-dev-radius-md: 8px;
+    --zen-dev-radius-pill: 999px;
+    --zen-dev-spacing: 4px;
+}
+
+/* 2. Global DevTools Resets */
+@-moz-document url-prefix("chrome://devtools/content/") {
+
+    /* Reset Base Backgrounds */
+    :root,
+    body,
+    .theme-dark,
+    .theme-light {
+        background-color: var(--zen-dev-base) !important;
+        color: var(--zen-dev-text) !important;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    }
+
+    /* Toolbar Styling - Tech/Grid Look */
+    .devtools-toolbar,
+    .devtools-tabbar,
+    .theme-toolbar {
+        background-color: var(--zen-dev-crust) !important;
+        border-bottom: 1px solid var(--zen-dev-surface0) !important;
+        box-shadow: none !important;
+        height: 36px !important;
+        /* Slightly taller for pills */
+        padding-inline: 4px !important;
+    }
+
+    /* Tabs - PILL STYLES */
+    .devtools-tab {
+        background: transparent !important;
+        color: var(--zen-dev-subtext0) !important;
+        border-radius: var(--zen-dev-radius-pill) !important;
+        /* Pills! */
+        margin: 4px 2px !important;
+        padding: 2px 10px !important;
+        border: 1px solid transparent !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .devtools-tab:hover {
+        background-color: var(--zen-dev-surface0) !important;
+        color: var(--zen-dev-text) !important;
+        border-color: var(--zen-dev-surface1) !important;
+        transform: translateY(-1px);
+        /* Slight lift */
+    }
+
+    .devtools-tab.selected {
+        background-color: var(--zen-dev-mauve) !important;
+        color: var(--zen-dev-crust) !important;
+        /* Contrast text */
+        font-weight: 700 !important;
+        box-shadow: 0 2px 8px rgba(203, 166, 247, 0.3) !important;
+        /* Glow */
+    }
+
+    .devtools-tab-line {
+        display: none !important;
+        /* Remove Firefox's default colored line */
+    }
+
+    /* Splitters - High-Tech Lines */
+    .devtools-horizontal-splitter,
+    .devtools-side-splitter {
+        background-color: var(--zen-dev-surface0) !important;
+        min-height: 1px !important;
+        min-width: 1px !important;
+        border: none !important;
+    }
+
+    /* Inputs & Search Fields - Console Style */
+    .devtools-searchinput,
+    .devtools-filterinput,
+    input[type="text"] {
+        background-color: var(--zen-dev-mantle) !important;
+        border: 1px solid var(--zen-dev-surface1) !important;
+        color: var(--zen-dev-text) !important;
+        border-radius: var(--zen-dev-radius-sm) !important;
+        padding: 3px 8px !important;
+        font-family: inherit !important;
+    }
+
+    .devtools-searchinput:focus,
+    .devtools-filterinput:focus,
+    input[type="text"]:focus {
+        border-color: var(--zen-dev-blue) !important;
+        box-shadow: 0 0 0 1px var(--zen-dev-blue) !important;
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    /* Buttons - Chips */
+    .devtools-button {
+        border-radius: var(--zen-dev-radius-sm) !important;
+        border: 1px solid transparent !important;
+        transition: all 0.15s ease !important;
+    }
+
+    .devtools-button:hover {
+        background-color: var(--zen-dev-surface1) !important;
+        border-color: var(--zen-dev-surface2) !important;
+    }
+}
+
+/* 3. Panel Specific Overrides */
+
+/* --- Inspector (The Blueprint) --- */
+@-moz-document url-prefix("chrome://devtools/content/inspector/index.xhtml") {
+    #inspector-splitter-box {
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    /* Markup View - Code Blocks */
+    #markup-box {
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    .tag-line {
+        border-radius: 0px !important;
+        margin-left: 2px !important;
+        border-left: 1px dotted var(--zen-dev-surface0) !important;
+        /* Tree guides */
+    }
+
+    .tag-line:hover {
+        background-color: var(--zen-dev-surface0) !important;
+        border-radius: 4px !important;
+    }
+
+    .theme-selected {
+        background-color: var(--zen-dev-surface1) !important;
+        color: var(--zen-dev-text) !important;
+    }
+
+    /* Tag Badges/Chips Style */
+    .tag-state {
+        background-color: var(--zen-dev-surface0) !important;
+        border-radius: 4px !important;
+        padding: 0 2px !important;
+        color: var(--zen-dev-subtext1) !important;
+    }
+
+    /* Tag Colors */
+    .theme-fg-color1 {
+        color: var(--zen-dev-text) !important;
+        font-weight: bold !important;
+    }
+
+    /* tags */
+    .theme-fg-color2 {
+        color: var(--zen-dev-subtext0) !important;
+        font-style: italic !important;
+    }
+
+    /* attributes */
+    .theme-fg-color3 {
+        color: var(--zen-dev-green) !important;
+    }
+
+    /* strings */
+
+    /* Rules View - Cards */
+    #sidebar-panel-ruleview {
+        background-color: var(--zen-dev-mantle) !important;
+    }
+
+    .ruleview-rule {
+        border-bottom: 1px solid var(--zen-dev-surface0) !important;
+        padding: 6px 8px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .ruleview-selector {
+        color: var(--zen-dev-mauve) !important;
+        font-weight: 700 !important;
+    }
+
+    .ruleview-propertyname {
+        color: var(--zen-dev-blue) !important;
+    }
+
+    .ruleview-propertyvalue {
+        color: var(--zen-dev-green) !important;
+    }
+}
+
+/* --- Web Console (Matrix Style) --- */
+@-moz-document url-prefix("chrome://devtools/content/webconsole/index.xhtml") {
+
+    .webconsole-app,
+    .webconsole-output-wrapper {
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    /* Console Rows */
+    .message {
+        background-color: transparent !important;
+        border-bottom: 1px solid var(--zen-dev-surface0) !important;
+        padding: 6px 4px !important;
+        margin: 2px 4px !important;
+        border-radius: 4px !important;
+    }
+
+    .message:hover {
+        background-color: var(--zen-dev-surface0) !important;
+        transform: translateX(2px);
+        /* Interactive nudge */
+    }
+
+    /* Distinct Log Levels with Chips of Color */
+    .message.error {
+        background-color: rgba(243, 139, 168, 0.05) !important;
+        border-left: none !important;
+        /* Remove classic bar */
+        border: 1px solid rgba(243, 139, 168, 0.2) !important;
+        /* Full border */
+    }
+
+    .message.warn {
+        background-color: rgba(249, 226, 175, 0.05) !important;
+        border-left: none !important;
+        border: 1px solid rgba(249, 226, 175, 0.2) !important;
+    }
+
+    /* Timestamps as pills */
+    .webconsole-timestamp {
+        color: var(--zen-dev-surface2) !important;
+        background: var(--zen-dev-crust) !important;
+        padding: 1px 4px !important;
+        border-radius: 4px !important;
+        font-size: 0.9em !important;
+    }
+}
+
+/* --- Debugger (IDE Feel) --- */
+@-moz-document url-prefix("chrome://devtools/content/debugger/index.xhtml"),
+url-prefix("chrome://devtools/content/debugger/src/index.html") {
+
+    /* Sidebar - Darker */
+    .sources-panel,
+    .secondary-panes {
+        background-color: var(--zen-dev-mantle) !important;
+        border-right: 1px solid var(--zen-dev-crust) !important;
+    }
+
+    .source-header {
+        background-color: var(--zen-dev-crust) !important;
+        border-bottom: 1px solid var(--zen-dev-surface0) !important;
+    }
+
+    /* Editor */
+    .editor-wrapper,
+    .CodeMirror {
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    .CodeMirror-gutters {
+        background-color: var(--zen-dev-base) !important;
+        border-right: 1px solid var(--zen-dev-surface0) !important;
+    }
+
+    /* Selected line in debugger */
+    .new-debug-line {
+        background-color: rgba(250, 179, 135, 0.2) !important;
+        /* Peach bg */
+        outline: 1px solid var(--zen-dev-peach) !important;
+    }
+}
+
+/* --- Network Monitor (Dashboard) --- */
+@-moz-document url-prefix("chrome://devtools/content/netmonitor/index.xhtml") {
+    .monitor-panel {
+        background-color: var(--zen-dev-base) !important;
+    }
+
+    .requests-list-header {
+        background-color: var(--zen-dev-dest) !important;
+        border-bottom: 2px solid var(--zen-dev-surface0) !important;
+    }
+
+    .requests-list-headers-wrapper {
+        background-color: var(--zen-dev-crust) !important;
+    }
+
+    .request-list-item {
+        background-color: transparent !important;
+        border-bottom: 1px solid var(--zen-dev-surface0) !important;
+        transition: background-color 0.1s !important;
+    }
+
+    .request-list-item:hover {
+        background-color: var(--zen-dev-surface0) !important;
+    }
+
+    .request-list-item.selected {
+        background-color: var(--zen-dev-surface1) !important;
+    }
+
+    /* Method Pills */
+    .requests-list-method-label {
+        border-radius: 4px !important;
+        padding: 2px 6px !important;
+        font-weight: 800 !important;
+        text-align: center !important;
+        font-size: 10px !important;
+        border: 1px solid transparent !important;
+    }
+
+    .requests-list-method-label[value="GET"] {
+        background: rgba(166, 227, 161, 0.1) !important;
+        color: var(--zen-dev-green) !important;
+        border-color: var(--zen-dev-green) !important;
+    }
+
+    .requests-list-method-label[value="POST"] {
+        background: rgba(137, 180, 250, 0.1) !important;
+        color: var(--zen-dev-blue) !important;
+        border-color: var(--zen-dev-blue) !important;
+    }
+
+    .requests-list-method-label[value="PUT"] {
+        background: rgba(250, 179, 135, 0.1) !important;
+        color: var(--zen-dev-peach) !important;
+        border-color: var(--zen-dev-peach) !important;
+    }
+
+    .requests-list-method-label[value="DELETE"] {
+        background: rgba(243, 139, 168, 0.1) !important;
+        color: var(--zen-dev-red) !important;
+        border-color: var(--zen-dev-red) !important;
+    }
+
+    /* Status Code Color Coding */
+    .requests-list-status-code {
+        font-weight: bold !important;
+    }
+}
+
+/* 4. Miscellaneous Polish */
+@-moz-document url-prefix("chrome://devtools/content/") {
+
+    /* Scrollbars - Minimalist */
+    * {
+        scrollbar-width: thin !important;
+        scrollbar-color: var(--zen-dev-surface1) transparent !important;
+    }
+
+    /* Splitter Handles */
+    .devtools-horizontal-splitter:hover,
+    .devtools-side-splitter:hover {
+        background-color: var(--zen-dev-blue) !important;
+        /* Highlight on hover */
+        cursor: col-resize;
+    }
+
+    /* Tooltips - Pop style */
+    tooltip {
+        background-color: var(--zen-dev-mantle) !important;
+        color: var(--zen-dev-text) !important;
+        border: 1px solid var(--zen-dev-mauve) !important;
+        border-radius: var(--zen-dev-radius-sm) !important;
+        padding: 6px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    }
+}

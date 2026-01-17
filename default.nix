@@ -62,8 +62,6 @@ python3.pkgs.buildPythonApplication {
     # Replace qs config call with nix shell pkg bin
     substituteInPlace src/caelestia/subcommands/shell.py \
     	--replace-fail '"qs", "-c", "caelestia"' '"caelestia-shell"'
-    substituteInPlace src/caelestia/subcommands/screenshot.py \
-    	--replace-fail '"qs", "-c", "caelestia"' '"caelestia-shell"'
 
     # Use config bin instead of discord + fix todoist + fix app2unit
     substituteInPlace src/caelestia/subcommands/toggle.py \

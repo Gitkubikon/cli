@@ -452,11 +452,14 @@ class Command:
                 log_message("Connected to Hyprland socket, listening for events...")
 
                 while True:
-                    data = sock.recv(4096).decode()
-                    if data:
-                        for line in data.strip().split("\n"):
-                            if line:
-                                self._handle_window_event(line)
+                    data = sock.recv(4096)
+                    if not data:
+                        log_message("Disconnected from Hyprland socket")
+                        break
+                    
+                    for line in data.decode().strip().split("\n"):
+                        if line:
+                            self._handle_window_event(line)
 
         except KeyboardInterrupt:
             log_message("Resizer daemon stopped")

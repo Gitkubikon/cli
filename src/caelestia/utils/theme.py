@@ -236,6 +236,12 @@ def apply_zellij(colours: dict[str, str]) -> None:
 
 
 @log_exception
+def apply_zen_browser(colours: dict[str, str]) -> None:
+    template = gen_replace(colours, templates_dir / "userContent.css", hash=True)
+    write_file(theme_dir / "userContent.css", template)
+
+
+@log_exception
 def apply_user_templates(colours: dict[str, str]) -> None:
     if not user_templates_dir.is_dir():
         return
@@ -283,4 +289,6 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
         apply_zed(colours)
     if check("enableZellij"):
         apply_zellij(colours)
+    if check("enableZenBrowser"):
+        apply_zen_browser(colours)
     apply_user_templates(colours)
