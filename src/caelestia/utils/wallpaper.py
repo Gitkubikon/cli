@@ -37,13 +37,13 @@ def _extract_animated_metadata(path: Path) -> dict:
             n_frames = getattr(img, "n_frames", 1) if is_animated else 1
             fmt = getattr(img, "format", None)
 
-            per_frame_duration = img.info.get("duration", 0) # in ms
+            per_frame_duration = img.info.get("duration", 0)  # in ms
             loop = img.info.get("loop")
 
             total_duration = None
             if is_animated and per_frame_duration and n_frames:
                 try:
-                    total_duration = int(per_frame_duration) * int(n_frames) # in ms
+                    total_duration = int(per_frame_duration) * int(n_frames)  # in ms
                 except Exception:
                     pass
 
@@ -51,10 +51,8 @@ def _extract_animated_metadata(path: Path) -> dict:
                 "is_animated": is_animated,
                 "format": fmt,
                 "n_frames": n_frames,
-                "frame_duration_ms": int(per_frame_duration) \
-                    if isinstance(per_frame_duration, (int, float)) else None,
-                "total_duration_ms": int(total_duration) \
-                    if isinstance(total_duration, (int, float)) else None,
+                "frame_duration_ms": int(per_frame_duration) if isinstance(per_frame_duration, (int, float)) else None,
+                "total_duration_ms": int(total_duration) if isinstance(total_duration, (int, float)) else None,
                 "loop": loop if isinstance(loop, int) else None,
             }
 
@@ -237,6 +235,12 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
     # Update colours
     scheme.update_colours()
     apply_colours(scheme.colours, scheme.mode)
+
+    # Ensure all output is flushed before process exits (critical for execDetached)
+    import sys
+
+    sys.stdout.flush()
+    sys.stderr.flush()
 
     # Run custom post-hook if configured
     try:

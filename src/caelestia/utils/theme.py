@@ -1,3 +1,5 @@
+import configparser
+import io
 import json
 import re
 import subprocess
@@ -102,6 +104,33 @@ def gen_sequences(colours: dict[str, str]) -> str:
 def write_file(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content)
+    # Ensure file is fully written to disk
+    try:
+        import os
+
+        fd = os.open(path, os.O_RDONLY)
+        os.fsync(fd)
+        os.close(fd)
+    except Exception:
+        pass
+
+
+def update_gtk_settings(path: Path, theme_name: str, icon_theme: str, prefer_dark: bool) -> None:
+    config = configparser.ConfigParser()
+    config.optionxform = str
+    if path.exists():
+        config.read(path)
+    if "Settings" not in config:
+        config["Settings"] = {}
+    settings = config["Settings"]
+    settings["gtk-theme-name"] = theme_name
+    settings["gtk-icon-theme-name"] = icon_theme
+    settings["gtk-application-prefer-dark-theme"] = "1" if prefer_dark else "0"
+
+    with io.StringIO() as buf:
+        config.write(buf)
+        content = buf.getvalue()
+    write_file(path, content)
 
 
 @log_exception
@@ -175,9 +204,34 @@ def apply_gtk(colours: dict[str, str], mode: str) -> None:
     write_file(config_dir / "gtk-3.0/gtk.css", template)
     write_file(config_dir / "gtk-4.0/gtk.css", template)
 
-    subprocess.run(["dconf", "write", "/org/gnome/desktop/interface/gtk-theme", "'adw-gtk3-dark'"])
-    subprocess.run(["dconf", "write", "/org/gnome/desktop/interface/color-scheme", f"'prefer-{mode}'"])
-    subprocess.run(["dconf", "write", "/org/gnome/desktop/interface/icon-theme", f"'Papirus-{mode.capitalize()}'"])
+    theme_name = "adw-gtk3-dark" if mode == "dark" else "adw-gtk3"
+    icon_theme = "Dracula"
+    prefer_dark = mode == "dark"
+
+    update_gtk_settings(config_dir / "gtk-3.0/settings.ini", theme_name, icon_theme, prefer_dark)
+    update_gtk_settings(config_dir / "gtk-4.0/settings.ini", theme_name, icon_theme, prefer_dark)
+
+    # Use gsettings instead of dconf for better live updates
+    subprocess.run(
+        ["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", theme_name], stderr=subprocess.DEVNULL
+    )
+    subprocess.run(
+        ["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", f"prefer-{mode}"], stderr=subprocess.DEVNULL
+    )
+    subprocess.run(
+        ["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icon_theme], stderr=subprocess.DEVNULL
+    )
+
+    # Trigger xsettingsd reload if it's running (for non-GNOME environments)
+    subprocess.run(["killall", "-HUP", "xsettingsd"], stderr=subprocess.DEVNULL)
+
+    # Touch the gtk.css file to trigger file watchers in GTK apps
+    import time
+
+    time.sleep(0.05)
+    gtk3_css = config_dir / "gtk-3.0/gtk.css"
+    if gtk3_css.exists():
+        gtk3_css.touch()
 
 
 @log_exception
@@ -206,6 +260,16 @@ general="Sans Serif,12,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"
 """
         write_file(config_dir / f"qt{ver}ct/qt{ver}ct.conf", conf)
 
+    # Qt applications typically need to be restarted to pick up theme changes
+    # Touch the config files to trigger any file watchers
+    import time
+
+    time.sleep(0.05)
+    for ver in 5, 6:
+        qt_conf = config_dir / f"qt{ver}ct/qt{ver}ct.conf"
+        if qt_conf.exists():
+            qt_conf.touch()
+
 
 @log_exception
 def apply_warp(colours: dict[str, str], mode: str) -> None:
@@ -224,15 +288,34 @@ def apply_cava(colours: dict[str, str]) -> None:
 
 
 @log_exception
-def apply_zed(colours: dict[str, str]) -> None:
+def apply_zed(colours: dict[str, str], mode: str) -> None:
     template = gen_replace(colours, templates_dir / "zed.json", hash=True)
+    template = template.replace('"appearance": "dark"', f'"appearance": "{mode}"')
     write_file(config_dir / "zed/themes/caelestia.json", template)
+
+    # Touch settings to trigger Zed's file watcher
+    # Small delay to ensure file watcher picks up the theme file change first
+    import time
+
+    time.sleep(0.05)
+    settings_path = config_dir / "zed/settings.json"
+    if settings_path.exists():
+        settings_path.touch()
 
 
 @log_exception
 def apply_zellij(colours: dict[str, str]) -> None:
     template = gen_replace(colours, templates_dir / "zellij.kdl")
     write_file(config_dir / "zellij/themes/caelestia.kdl", template)
+
+
+@log_exception
+def apply_zathura(colours: dict[str, str]) -> None:
+    template = gen_replace(colours, templates_dir / "zathurarc", hash=True)
+    write_file(config_dir / "zathura/zathurarc", template)
+    # Note: Zathura doesn't support live config reload via signals
+    # Users can press 'R' in Zathura to reload the document and apply new colors
+    # Or simply reopen the document
 
 
 @log_exception
@@ -286,9 +369,11 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
     if check("enableCava"):
         apply_cava(colours)
     if check("enableZed"):
-        apply_zed(colours)
+        apply_zed(colours, mode)
     if check("enableZellij"):
         apply_zellij(colours)
+    if check("enableZathura"):
+        apply_zathura(colours)
     if check("enableZenBrowser"):
         apply_zen_browser(colours)
     apply_user_templates(colours)

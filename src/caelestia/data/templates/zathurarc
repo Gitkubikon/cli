@@ -1,0 +1,68 @@
+# Zathura color configuration for Caelestia theme
+
+# Hide status bar
+set guioptions ""
+
+# Default zoom mode - fit page width to window
+set adjust-open "best-fit"
+set zoom-center true
+
+# Recolor settings - disable by default, toggle with Ctrl+i
+set recolor "false"
+set recolor-keephue "false"
+set recolor-reverse-video "false"
+
+# Recolor colors (for document content)
+set recolor-lightcolor "{{ $surface }}"
+set recolor-darkcolor "{{ $onSurface }}"
+
+# Keybindings
+map <C-i> recolor
+
+# Main interface colors
+set default-bg "{{ $surface }}"
+set default-fg "{{ $onSurface }}"
+
+# Status bar colors
+set statusbar-bg "{{ $surfaceContainerHighest }}"
+set statusbar-fg "{{ $onSurface }}"
+
+# Input bar colors
+set inputbar-bg "{{ $surfaceContainer }}"
+set inputbar-fg "{{ $onSurface }}"
+
+# Completion colors
+set completion-bg "{{ $surfaceContainer }}"
+set completion-fg "{{ $onSurface }}"
+set completion-group-bg "{{ $surfaceVariant }}"
+set completion-group-fg "{{ $onSurfaceVariant }}"
+set completion-highlight-bg "{{ $primary }}"
+set completion-highlight-fg "{{ $onPrimary }}"
+
+# Notification colors
+set notification-bg "{{ $surfaceContainer }}"
+set notification-fg "{{ $onSurface }}"
+set notification-error-bg "{{ $errorContainer }}"
+set notification-error-fg "{{ $onErrorContainer }}"
+set notification-warning-bg "{{ $tertiaryContainer }}"
+set notification-warning-fg "{{ $onTertiaryContainer }}"
+
+# Highlight colors
+set highlight-color "{{ $secondary }}"
+set highlight-active-color "{{ $primary }}"
+set highlight-fg "{{ $onSecondary }}"
+
+# Index mode colors
+set index-bg "{{ $surfaceContainer }}"
+set index-fg "{{ $onSurface }}"
+set index-active-bg "{{ $primary }}"
+set index-active-fg "{{ $onPrimary }}"
+
+# Loading text colors
+set render-loading-bg "{{ $surface }}"
+set render-loading-fg "{{ $onSurface }}"
+
+# Signature colors
+set signature-error-color "{{ $error }}"
+set signature-success-color "{{ $green }}"
+set signature-warning-color "{{ $yellow }}"
