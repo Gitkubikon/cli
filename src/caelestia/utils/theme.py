@@ -2,7 +2,9 @@ import configparser
 import io
 import json
 import re
+import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 from caelestia.utils.colour import get_dynamic_colours
@@ -39,7 +41,7 @@ def gen_replace(colours: dict[str, str], template: Path, hash: bool = False) -> 
     return template
 
 
-def gen_replace_dynamic(colours: dict[str, str], template: Path) -> str:
+def gen_replace_dynamic(colours: dict[str, str], template: Path, mode: str) -> str:
     def fill_colour(match: re.Match) -> str:
         data = match.group(1).strip().split(".")
         if len(data) != 2:
@@ -50,17 +52,23 @@ def gen_replace_dynamic(colours: dict[str, str], template: Path) -> str:
         return getattr(colours_dyn[col], form)
 
     # match atomic {{ . }} pairs
-    field = r"\{\{((?:(?!\{\{|\}\}).)*)\}\}"
+    dotField = r"\{\{((?:(?!\{\{|\}\}).)*)\}"
+
+    # match {{ mode }}
+    modeField = r"\{\{\s*mode\s*\}"
+
     colours_dyn = get_dynamic_colours(colours)
     template_content = template.read_text()
-    template_filled = re.sub(field, fill_colour, template_content)
+
+    template_filled = re.sub(dotField, fill_colour, template_content)
+    template_filled = re.sub(modeField, mode, template_content)
 
     return template_filled
 
 
 def c2s(c: str, *i: list[int]) -> str:
     """Hex to ANSI sequence (e.g. ffffff, 11 -> \x1b]11;rgb:ff/ff/ff\x1b\\)"""
-    return f"\x1b]{';'.join(map(str, i))};rgb:{c[0:2]}/{c[2:4]}/{c[4:6]}\x1b\\"
+    return f"\x1b]{{';'.join(map(str, i))}};rgb:{c[0:2]}/{c[2:4]}/{c[4:6]}\x1b\\"
 
 
 def gen_sequences(colours: dict[str, str]) -> str:
@@ -103,16 +111,11 @@ def gen_sequences(colours: dict[str, str]) -> str:
 
 def write_file(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content)
-    # Ensure file is fully written to disk
-    try:
-        import os
 
-        fd = os.open(path, os.O_RDONLY)
-        os.fsync(fd)
-        os.close(fd)
-    except Exception:
-        pass
+    with tempfile.NamedTemporaryFile("w") as f:
+        f.write(content)
+        f.flush()
+        shutil.move(f.name, path)
 
 
 def update_gtk_settings(path: Path, theme_name: str, icon_theme: str, prefer_dark: bool) -> None:
@@ -325,13 +328,13 @@ def apply_zen_browser(colours: dict[str, str]) -> None:
 
 
 @log_exception
-def apply_user_templates(colours: dict[str, str]) -> None:
+def apply_user_templates(colours: dict[str, str], mode: str) -> None:
     if not user_templates_dir.is_dir():
         return
 
     for file in user_templates_dir.iterdir():
         if file.is_file():
-            content = gen_replace_dynamic(colours, file)
+            content = gen_replace_dynamic(colours, file, mode)
             write_file(theme_dir / file.name, content)
 
 
@@ -376,4 +379,4 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
         apply_zathura(colours)
     if check("enableZenBrowser"):
         apply_zen_browser(colours)
-    apply_user_templates(colours)
+    apply_user_templates(colours, mode)
