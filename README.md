@@ -4,23 +4,23 @@ The main control script for the Caelestia dotfiles.
 
 <details><summary id="dependencies">External dependencies</summary>
 
--   [`libnotfy`](https://gitlab.gnome.org/GNOME/libnotify) - sending notifications
--   [`swappy`](https://github.com/jtheoof/swappy) - screenshot editor
--   [`grim`](https://gitlab.freedesktop.org/emersion/grim) - taking screenshots
--   [`dart-sass`](https://github.com/sass/dart-sass) - discord theming
--   [`app2unit`](https://github.com/Vladimir-csp/app2unit) - launching apps
--   [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) - copying to clipboard
--   [`slurp`](https://github.com/emersion/slurp) - selecting an area
--   [`gpu-screen-recorder`](https://git.dec05eba.com/gpu-screen-recorder/about) - screen recording
--   `glib2` - closing notifications
--   [`cliphist`](https://github.com/sentriz/cliphist) - clipboard history
--   [`fuzzel`](https://codeberg.org/dnkl/fuzzel) - clipboard history/emoji picker
+- [`libnotfy`](https://gitlab.gnome.org/GNOME/libnotify) - sending notifications
+- [`swappy`](https://github.com/jtheoof/swappy) - screenshot editor
+- [`grim`](https://gitlab.freedesktop.org/emersion/grim) - taking screenshots
+- [`dart-sass`](https://github.com/sass/dart-sass) - discord theming
+- [`app2unit`](https://github.com/Vladimir-csp/app2unit) - launching apps
+- [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) - copying to clipboard
+- [`slurp`](https://github.com/emersion/slurp) - selecting an area
+- [`gpu-screen-recorder`](https://git.dec05eba.com/gpu-screen-recorder/about) - screen recording
+- `glib2` - closing notifications
+- [`cliphist`](https://github.com/sentriz/cliphist) - clipboard history
+- [`fuzzel`](https://codeberg.org/dnkl/fuzzel) - clipboard history/emoji picker
 
 ### Optional dependencies for OCR click-to-copy (`clicktodo` command)
 
--   [`grim`](https://gitlab.freedesktop.org/emersion/grim) - taking screenshots (already listed above)
--   [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) - copying to clipboard (already listed above)
--   Python packages: `rapidocr-onnxruntime`, `onnxruntime`, `PyQt6`, `numpy`, `threadpoolctl` (install via `pip install caelestia[ocr]`)
+- [`grim`](https://gitlab.freedesktop.org/emersion/grim) - taking screenshots (already listed above)
+- [`wl-clipboard`](https://github.com/bugaevc/wl-clipboard) - copying to clipboard (already listed above)
+- Python packages: `rapidocr-onnxruntime`, `onnxruntime`, `PyQt6`, `numpy`, `threadpoolctl` (install via `pip install caelestia[ocr]`)
 
 **Performance Note:** The OCR feature uses RapidOCR with ONNXRuntime for optimal CPU performance (5-15x faster than EasyOCR). For best results on high-resolution displays, run the setup script to configure the persistent daemon:
 
@@ -145,30 +145,64 @@ The `clicktodo` command provides an OCR-based workflow for extracting and copyin
 
 **Setup:**
 
-1. Install OCR dependencies:
+1. Ensure your venv uses **Python 3.13** (3.14 is not yet supported by `rapidocr-onnxruntime`):
+
    ```sh
-   pip install caelestia[ocr]
-   # Or manually: pip install rapidocr-onnxruntime onnxruntime PyQt6 numpy
+   cd /path/to/caelestia/cli
+   python3.13 -m venv .venv
    ```
 
-2. Run the setup script to configure the OCR daemon:
+2. Install OCR dependencies:
+
    ```sh
-   ./setup-ocr.sh
+   .venv/bin/pip install -e ".[ocr]"
+   # This installs: rapidocr-onnxruntime, onnxruntime, PyQt6, numpy, threadpoolctl
    ```
 
-   This will:
-   - Install dependencies if missing
-   - Set up a systemd user service for the OCR daemon
-   - Create default configuration at `~/.config/caelestia/ocr.json`
-   - Start the daemon (models stay hot in memory for instant responses)
+3. Install and enable the systemd user service for the OCR daemon:
+
+   ```sh
+   mkdir -p ~/.config/systemd/user
+   cp systemd/caelestia-ocrd.service ~/.config/systemd/user/
+
+   # IMPORTANT: Edit the service to point ExecStart at your venv python:
+   # ExecStart=/path/to/caelestia/cli/.venv/bin/python -m caelestia.ocrd
+   nano ~/.config/systemd/user/caelestia-ocrd.service
+
+   systemctl --user daemon-reload
+   systemctl --user enable --now caelestia-ocrd
+   ```
+
+4. Create the default OCR config (optional, auto-detected defaults are fine):
+
+   ```sh
+   mkdir -p ~/.config/caelestia
+   cat > ~/.config/caelestia/ocr.json << 'EOF'
+   {
+     "provider": "cpu-ort",
+     "downscale": 0.6,
+     "max_boxes": 300,
+     "use_gpu": false,
+     "warm_start": true,
+     "performance": {}
+   }
+   EOF
+   ```
+
+5. Verify the daemon is running:
+   ```sh
+   systemctl --user status caelestia-ocrd
+   ```
 
 **Requirements:**
+
+- Python 3.13 (3.14 not yet supported by rapidocr-onnxruntime)
 - Requires `grim` and `wl-clipboard` (already needed for other features)
-- Python 3.13+ with pip
 
 **Hyprland keybinding example:**
 
 Add to your `hyprland.conf`:
+
 ```
 # Standard mode
 bind = SUPER, O, exec, caelestia clicktodo
@@ -178,6 +212,7 @@ bind = SUPER SHIFT, O, exec, caelestia clicktodo --fast
 ```
 
 **Usage:**
+
 ```sh
 # Standard mode
 caelestia clicktodo
@@ -189,28 +224,30 @@ caelestia clicktodo --fast --live
 **Configuration:**
 
 Edit `~/.config/caelestia/ocr.json` to customize:
+
 ```json
 {
-  "provider": "cpu-ort",    // cpu-ort, gpu-rocm, npu-xdna (future)
-  "downscale": 0.6,         // Detection downscale factor (0.5-1.0)
-  "tiles": 1,               // Parallel tiles (future feature)
-  "max_boxes": 300,         // Maximum text boxes to detect
-  "use_gpu": false,         // Enable GPU (experimental on AMD)
-  "warm_start": true,       // Run warm-up on daemon start
-  "performance": {
-    "idle_threads": 1,      // Background thread budget when idle
-    "standard_threads": 4,  // Default thread budget during normal OCR
-    "fast_threads": 0,      // 0 = auto, otherwise specific thread count
-    "idle_cores": 1,        // CPU cores kept active when idle
-    "standard_cores": 0,    // 0 = auto mid-range core count
-    "fast_cores": 0         // 0 = all available cores during bursts
-  }
+	"provider": "cpu-ort", // cpu-ort, gpu-rocm, npu-xdna (future)
+	"downscale": 0.6, // Detection downscale factor (0.5-1.0)
+	"tiles": 1, // Parallel tiles (future feature)
+	"max_boxes": 300, // Maximum text boxes to detect
+	"use_gpu": false, // Enable GPU (experimental on AMD)
+	"warm_start": true, // Run warm-up on daemon start
+	"performance": {
+		"idle_threads": 1, // Background thread budget when idle
+		"standard_threads": 4, // Default thread budget during normal OCR
+		"fast_threads": 0, // 0 = auto, otherwise specific thread count
+		"idle_cores": 1, // CPU cores kept active when idle
+		"standard_cores": 0, // 0 = auto mid-range core count
+		"fast_cores": 0 // 0 = all available cores during bursts
+	}
 }
 ```
 
 Set any value to `0` (or omit the key) to allow the daemon to auto-detect from the host CPU. Leave the entire `performance` block out to use adaptive defaults.
 
 **Daemon Management:**
+
 ```sh
 # Check status
 systemctl --user status caelestia-ocrd
@@ -226,6 +263,7 @@ journalctl --user -u caelestia-ocrd -f
 ```
 
 **Future Optimizations:**
+
 - NPU acceleration via AMD XDNA (when ONNX Runtime EP is stable on Linux)
 - GPU acceleration via ROCm (when Radeon 890M iGPU is officially supported)
 - Parallel tile processing for ultra-high-resolution displays
@@ -238,65 +276,84 @@ All configuration options are in `~/.config/caelestia/cli.json`.
 
 ```json
 {
-    "record": {
-        "extraArgs": []
-    },
-    "wallpaper": {
-        "postHook": "echo $WALLPAPER_PATH"  
-    },
-    "theme": {
-        "enableTerm": true,
-        "enableHypr": true,
-        "enableDiscord": true,
-        "enableSpicetify": true,
-        "enableFuzzel": true,
-        "enableBtop": true,
-        "enableGtk": true,
-        "enableQt": true
-    },
-    "toggles": {
-        "communication": {
-            "discord": {
-                "enable": true,
-                "match": [{ "class": "discord" }],
-                "command": ["discord"],
-                "move": true
-            },
-            "whatsapp": {
-                "enable": true,
-                "match": [{ "class": "whatsapp" }],
-                "move": true
-            }
-        },
-        "music": {
-            "spotify": {
-                "enable": true,
-                "match": [{ "class": "Spotify" }, { "initialTitle": "Spotify" }, { "initialTitle": "Spotify Free" }],
-                "command": ["spicetify", "watch", "-s"],
-                "move": true
-            },
-            "feishin": {
-                "enable": true,
-                "match": [{ "class": "feishin" }],
-                "move": true
-            }
-        },
-        "sysmon": {
-            "btop": {
-                "enable": true,
-                "match": [{ "class": "btop", "title": "btop", "workspace": { "name": "special:sysmon" } }],
-                "command": ["foot", "-a", "btop", "-T", "btop", "fish", "-C", "exec btop"]
-            }
-        },
-        "todo": {
-            "todoist": {
-                "enable": true,
-                "match": [{ "class": "Todoist" }],
-                "command": ["todoist"],
-                "move": true
-            }
-        }
-    }
+	"record": {
+		"extraArgs": []
+	},
+	"wallpaper": {
+		"postHook": "echo $WALLPAPER_PATH"
+	},
+	"theme": {
+		"enableTerm": true,
+		"enableHypr": true,
+		"enableDiscord": true,
+		"enableSpicetify": true,
+		"enableFuzzel": true,
+		"enableBtop": true,
+		"enableGtk": true,
+		"enableQt": true
+	},
+	"toggles": {
+		"communication": {
+			"discord": {
+				"enable": true,
+				"match": [{ "class": "discord" }],
+				"command": ["discord"],
+				"move": true
+			},
+			"whatsapp": {
+				"enable": true,
+				"match": [{ "class": "whatsapp" }],
+				"move": true
+			}
+		},
+		"music": {
+			"spotify": {
+				"enable": true,
+				"match": [
+					{ "class": "Spotify" },
+					{ "initialTitle": "Spotify" },
+					{ "initialTitle": "Spotify Free" }
+				],
+				"command": ["spicetify", "watch", "-s"],
+				"move": true
+			},
+			"feishin": {
+				"enable": true,
+				"match": [{ "class": "feishin" }],
+				"move": true
+			}
+		},
+		"sysmon": {
+			"btop": {
+				"enable": true,
+				"match": [
+					{
+						"class": "btop",
+						"title": "btop",
+						"workspace": { "name": "special:sysmon" }
+					}
+				],
+				"command": [
+					"foot",
+					"-a",
+					"btop",
+					"-T",
+					"btop",
+					"fish",
+					"-C",
+					"exec btop"
+				]
+			}
+		},
+		"todo": {
+			"todoist": {
+				"enable": true,
+				"match": [{ "class": "Todoist" }],
+				"command": ["todoist"],
+				"move": true
+			}
+		}
+	}
 }
 ```
 

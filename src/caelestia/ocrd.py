@@ -192,39 +192,33 @@ class PerformanceManager:
 
 class OCRDaemon:
     """Persistent OCR service with hot model cache."""
-    
+
     def __init__(self, socket_path: str):
         self.socket_path = socket_path
         self.config = self._load_config()
         self.ocr_engine = None
-        self.stats = {
-            "requests": 0,
-            "total_time": 0.0,
-            "avg_time": 0.0,
-            "warmed": False,
-            "last_warm": 0.0
-        }
+        self.stats = {"requests": 0, "total_time": 0.0, "avg_time": 0.0, "warmed": False, "last_warm": 0.0}
         self.performance = PerformanceManager(self.config)
         self.performance.apply_idle()
         cpu_count = os.cpu_count() or 4
         default_workers = max(1, cpu_count // 2)
         self.stream_workers = max(1, min(8, default_workers))
-    
+
     def _load_config(self) -> Dict:
         """Load OCR configuration."""
         config_dir = Path.home() / ".config" / "caelestia"
         config_file = config_dir / "ocr.json"
-        
+
         default_config = {
             "provider": "cpu-ort",  # cpu-ort, gpu-rocm, npu-xdna
-            "downscale": 0.6,       # Detection downscale factor
-            "tiles": 1,             # Number of tiles for parallel processing
-            "max_boxes": 300,       # Maximum boxes to return
-            "use_gpu": False,       # Use GPU if available (experimental)
-            "warm_start": True,     # Run warm-up inference on start
-            "performance": {}       # Thread/affinity tuning
+            "downscale": 0.6,  # Detection downscale factor
+            "tiles": 1,  # Number of tiles for parallel processing
+            "max_boxes": 300,  # Maximum boxes to return
+            "use_gpu": False,  # Use GPU if available (experimental)
+            "warm_start": True,  # Run warm-up inference on start
+            "performance": {},  # Thread/affinity tuning
         }
-        
+
         try:
             if config_file.exists():
                 with open(config_file) as f:
@@ -232,18 +226,18 @@ class OCRDaemon:
                     default_config.update(user_config)
         except Exception as e:
             print(f"Warning: Could not load config: {e}", file=sys.stderr)
-        
+
         return default_config
-    
+
     def _init_ocr(self):
         """Initialize RapidOCR engine with warm-up."""
         print("Initializing RapidOCR engine...")
         start = time.time()
-        
+
         # Initialize with GPU if configured (experimental on AMD)
         use_gpu = self.config.get("use_gpu", False)
         self.ocr_engine = RapidOCR(use_cuda=use_gpu)
-        
+
         # Warm-up: run inference on a tiny image to initialize ONNX graph
         if self.config.get("warm_start", True):
             self._run_warm_up("startup")
@@ -251,7 +245,7 @@ class OCRDaemon:
         elapsed = time.time() - start
         print(f"OCR engine ready in {elapsed:.2f}s")
         print(f"Performance profile: {self.performance.describe()}")
-    
+
     def _downscale_for_detection(self, img: Image.Image, factor: float) -> Tuple[Image.Image, float]:
         """
         Downscale image for faster detection.
@@ -259,15 +253,15 @@ class OCRDaemon:
         """
         if factor >= 1.0:
             return img, 1.0
-        
+
         w, h = img.size
         new_w = int(w * factor)
         new_h = int(h * factor)
-        
+
         # Use high-quality downsampling
         downscaled = img.resize((new_w, new_h), Image.LANCZOS)
         return downscaled, factor
-    
+
     def _rescale_boxes(self, boxes: List, scale_factor: float) -> List:
         """Rescale bounding boxes back to original image coordinates."""
         if scale_factor >= 1.0:
@@ -281,7 +275,9 @@ class OCRDaemon:
 
         return rescaled
 
-    def _prepare_image(self, image_path: str, fast_mode: bool) -> tuple[Image.Image, Image.Image, np.ndarray, float, Dict[str, float]]:
+    def _prepare_image(
+        self, image_path: str, fast_mode: bool
+    ) -> tuple[Image.Image, Image.Image, np.ndarray, float, Dict[str, float]]:
         """Load an image from disk and prepare downscaled numpy array for OCR."""
         load_start = time.time()
         img = Image.open(image_path)
@@ -298,29 +294,35 @@ class OCRDaemon:
 
         img_array = np.array(img_for_ocr)
 
-        return img, img_for_ocr, img_array, actual_scale, {
-            "load": load_time,
-            "downscale": downscale_time,
-        }
-    
+        return (
+            img,
+            img_for_ocr,
+            img_array,
+            actual_scale,
+            {
+                "load": load_time,
+                "downscale": downscale_time,
+            },
+        )
+
     def process_image(self, image_path: str, fast_mode: bool = False) -> Dict:
         """
         Process an image and return OCR results.
-        
+
         Args:
             image_path: Path to the image file
             fast_mode: Enable aggressive optimizations
-            
+
         Returns:
             Dict with keys: boxes, texts, scores, timing
         """
         start_time = time.time()
-        
+
         try:
             original_img, img_for_ocr, img_array, actual_scale, timing = self._prepare_image(image_path, fast_mode)
             load_time = timing["load"]
             downscale_time = timing["downscale"]
-            
+
             # Run OCR
             boost_state = self.performance.boost(fast_mode)
             ocr_time = 0.0
@@ -333,7 +335,7 @@ class OCRDaemon:
             finally:
                 self.performance.restore(*boost_state)
                 self.performance.apply_idle()
-            
+
             # Parse results
             if result is None or len(result) == 0:
                 boxes, texts, scores = [], [], []
@@ -342,15 +344,15 @@ class OCRDaemon:
                 boxes = [item[0] for item in result]
                 texts = [item[1] for item in result]
                 scores = [item[2] for item in result]
-                
+
                 # Rescale boxes back to original coordinates
                 boxes = self._rescale_boxes(boxes, actual_scale)
-            
+
             # Limit boxes if configured
             max_boxes = self.config.get("max_boxes", 300)
             if fast_mode:
                 max_boxes = min(max_boxes, 150)
-            
+
             if len(boxes) > max_boxes:
                 # Sort by score and keep top N
                 sorted_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
@@ -358,9 +360,9 @@ class OCRDaemon:
                 boxes = [boxes[i] for i in sorted_indices]
                 texts = [texts[i] for i in sorted_indices]
                 scores = [scores[i] for i in sorted_indices]
-            
+
             total_time = time.time() - start_time
-            
+
             # Update stats
             self.stats["requests"] += 1
             self.stats["total_time"] += total_time
@@ -377,20 +379,18 @@ class OCRDaemon:
                     "load": round(load_time * 1000, 2),
                     "downscale": round(downscale_time * 1000, 2),
                     "ocr": round(ocr_time * 1000, 2),
-                    "total": round(total_time * 1000, 2)
+                    "total": round(total_time * 1000, 2),
                 },
                 "image_size": f"{original_img.size[0]}x{original_img.size[1]}",
                 "processed_size": f"{img_for_ocr.size[0]}x{img_for_ocr.size[1]}",
-                "num_detections": len(boxes)
+                "num_detections": len(boxes),
             }
-            
+
         except Exception as e:
             return {
                 "status": "error",
                 "error": str(e),
-                "timing": {
-                    "total": round((time.time() - start_time) * 1000, 2)
-                }
+                "timing": {"total": round((time.time() - start_time) * 1000, 2)},
             }
 
     def _detect_regions_for_stream(
@@ -401,13 +401,7 @@ class OCRDaemon:
         if self.ocr_engine is None:
             raise RuntimeError("OCR engine not initialised")
 
-        raw_h, raw_w = img_array.shape[:2]
-        op_record: Dict[str, Any] = {}
-        proc_img, ratio_h, ratio_w = self.ocr_engine.preprocess(img_array)
-        op_record["preprocess"] = {"ratio_h": ratio_h, "ratio_w": ratio_w}
-
-        proc_img, op_record = self.ocr_engine.maybe_add_letterbox(proc_img, op_record)
-        dt_boxes, det_elapsed = self.ocr_engine.auto_text_det(proc_img)
+        dt_boxes, det_elapsed = self.ocr_engine.text_detector(img_array)
 
         if dt_boxes is None or len(dt_boxes) == 0:
             return [], [], det_elapsed
@@ -418,12 +412,15 @@ class OCRDaemon:
             boxes_array = np.array(dt_boxes)
 
         sorted_boxes = self.ocr_engine.sorted_boxes(boxes_array)
-        crop_list = self.ocr_engine.get_crop_img_list(proc_img, sorted_boxes)
+        crop_list = self.ocr_engine.get_crop_img_list(img_array, sorted_boxes)
 
-        origin_boxes = self.ocr_engine._get_origin_points(sorted_boxes, op_record, raw_h, raw_w)
-        origin_boxes_list = origin_boxes.astype(float).tolist()
+        boxes_list = (
+            sorted_boxes.astype(float).tolist()
+            if isinstance(sorted_boxes, np.ndarray)
+            else [b.astype(float).tolist() if isinstance(b, np.ndarray) else b for b in sorted_boxes]
+        )
 
-        return origin_boxes_list, crop_list, det_elapsed
+        return boxes_list, crop_list, det_elapsed
 
     def _recognize_region(self, crop_img: np.ndarray) -> tuple[str, float]:
         """Recognize text inside a cropped region."""
@@ -431,10 +428,10 @@ class OCRDaemon:
             raise RuntimeError("OCR engine not initialised")
 
         images: list[np.ndarray] = [crop_img]
-        if self.ocr_engine.use_cls:
+        if self.ocr_engine.use_angle_cls:
             images, _cls_res, _cls_time = self.ocr_engine.text_cls(images)
 
-        rec_res, _rec_time = self.ocr_engine.text_rec(images, False)
+        rec_res, _rec_time = self.ocr_engine.text_recognizer(images)
         if not rec_res:
             return "", 0.0
 
@@ -516,10 +513,7 @@ class OCRDaemon:
                 return idx, box_scaled, text, float(score), None
 
             with ThreadPoolExecutor(max_workers=self.stream_workers) as executor:
-                futures = [
-                    executor.submit(worker, idx, crop, scaled_boxes[idx])
-                    for idx, crop in enumerate(crop_list)
-                ]
+                futures = [executor.submit(worker, idx, crop, scaled_boxes[idx]) for idx, crop in enumerate(crop_list)]
 
                 for future in as_completed(futures):
                     idx, box_scaled, text, score, error = future.result()
@@ -588,18 +582,10 @@ class OCRDaemon:
             duration = time.time() - start
             self.stats["warmed"] = True
             self.stats["last_warm"] = time.time()
-            return {
-                "status": "success",
-                "timing": {
-                    "warm": round(duration * 1000, 2)
-                }
-            }
+            return {"status": "success", "timing": {"warm": round(duration * 1000, 2)}}
         except Exception as exc:
             print(f"Warning: Warm-up failed: {exc}", file=sys.stderr)
-            return {
-                "status": "error",
-                "error": str(exc)
-            }
+            return {"status": "error", "error": str(exc)}
         finally:
             self.performance.restore(*boost_state)
             self.performance.apply_idle()
@@ -609,23 +595,23 @@ class OCRDaemon:
         # Create socket directory
         socket_dir = Path(self.socket_path).parent
         socket_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Remove stale socket
         if Path(self.socket_path).exists():
             Path(self.socket_path).unlink()
-        
+
         # Initialize OCR engine
         self._init_ocr()
-        
+
         # Create UNIX domain socket
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.bind(self.socket_path)
         sock.listen(5)
-        
+
         print(f"OCR Daemon listening on {self.socket_path}")
         print(f"Config: {self.config}")
         print("Ready to process requests...")
-        
+
         try:
             while True:
                 conn, _ = sock.accept()
@@ -639,25 +625,25 @@ class OCRDaemon:
                         data += chunk
                         if b"\n" in chunk:
                             break
-                    
+
                     if not data:
                         continue
-                    
+
                     request = json.loads(data.decode())
                     cmd = request.get("cmd")
-                    
+
                     if cmd == "ocr_full":
                         image_path = request.get("path")
                         fast_mode = request.get("fast", False)
-                        
+
                         print(f"Processing: {image_path} (fast={fast_mode})")
                         result = self.process_image(image_path, fast_mode)
-                        
+
                         if result["status"] == "success":
                             print(f"  → {result['num_detections']} detections in {result['timing']['total']}ms")
                         else:
                             print(f"  → Error: {result.get('error')}")
-                        
+
                         # Send response
                         response = json.dumps(result) + "\n"
                         conn.sendall(response.encode())
@@ -701,7 +687,7 @@ class OCRDaemon:
                     elif cmd == "stats":
                         response = json.dumps(self.stats) + "\n"
                         conn.sendall(response.encode())
-                    
+
                     elif cmd == "ping":
                         response = json.dumps({"status": "ok"}) + "\n"
                         conn.sendall(response.encode())
@@ -715,7 +701,7 @@ class OCRDaemon:
                     else:
                         response = json.dumps({"status": "error", "error": f"Unknown command: {cmd}"}) + "\n"
                         conn.sendall(response.encode())
-                
+
                 except Exception as e:
                     print(f"Error handling request: {e}", file=sys.stderr)
                     try:
@@ -725,7 +711,7 @@ class OCRDaemon:
                         pass
                 finally:
                     conn.close()
-        
+
         except KeyboardInterrupt:
             print("\nShutting down...")
         finally:

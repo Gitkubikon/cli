@@ -68,7 +68,7 @@ def gen_replace_dynamic(colours: dict[str, str], template: Path, mode: str) -> s
 
 def c2s(c: str, *i: list[int]) -> str:
     """Hex to ANSI sequence (e.g. ffffff, 11 -> \x1b]11;rgb:ff/ff/ff\x1b\\)"""
-    return f"\x1b]{{';'.join(map(str, i))}};rgb:{c[0:2]}/{c[2:4]}/{c[4:6]}\x1b\\"
+    return f"\x1b]{';'.join(map(str, i))};rgb:{c[0:2]}/{c[2:4]}/{c[4:6]}\x1b\\"
 
 
 def gen_sequences(colours: dict[str, str]) -> str:
