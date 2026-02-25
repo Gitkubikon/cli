@@ -5,7 +5,7 @@ Caelestia OCR Daemon (ocrd)
 A persistent daemon that keeps OCR models hot in memory for fast text detection.
 Uses RapidOCR with ONNXRuntime for optimal CPU performance.
 
-Future-ready for NPU (XDNA) acceleration when AMD's ONNX Runtime EP is stable on Linux.
+Supports AMD ROCm GPU acceleration via MIGraphX execution provider.
 """
 
 import json
@@ -33,6 +33,22 @@ try:
 except ImportError:  # pragma: no cover - optional performance tuning
     ThreadpoolController = None
 
+# Check for ROCm/MIGraphX support
+_ROCM_AVAILABLE = False
+_ROCM_PROVIDER = None
+try:
+    import onnxruntime as ort
+
+    _available_providers = ort.get_available_providers()
+    if "MIGraphXExecutionProvider" in _available_providers:
+        _ROCM_AVAILABLE = True
+        _ROCM_PROVIDER = "MIGraphXExecutionProvider"
+    elif "ROCMExecutionProvider" in _available_providers:
+        _ROCM_AVAILABLE = True
+        _ROCM_PROVIDER = "ROCMExecutionProvider"
+except ImportError:
+    pass
+
 # Import RapidOCR
 try:
     from rapidocr_onnxruntime import RapidOCR
@@ -40,6 +56,62 @@ except ImportError:
     print("Error: rapidocr-onnxruntime not installed.", file=sys.stderr)
     print("Install with: pip install rapidocr-onnxruntime", file=sys.stderr)
     sys.exit(1)
+
+
+def _patch_rapidocr_for_rocm():
+    """Monkey-patch RapidOCR's OrtInferSession to support ROCm/MIGraphX."""
+    if not _ROCM_AVAILABLE:
+        return False
+
+    try:
+        import rapidocr_onnxruntime.utils as rapid_utils
+        from onnxruntime import GraphOptimizationLevel, InferenceSession, SessionOptions, get_available_providers
+
+        _original_init = rapid_utils.OrtInferSession.__init__
+
+        def _patched_init(self, config):
+            sess_opt = SessionOptions()
+            sess_opt.log_severity_level = 4
+            sess_opt.enable_cpu_mem_arena = False
+            sess_opt.graph_optimization_level = GraphOptimizationLevel.ORT_ENABLE_ALL
+
+            cpu_ep = "CPUExecutionProvider"
+            cpu_provider_options = {"arena_extend_strategy": "kSameAsRequested"}
+
+            EP_list = []
+
+            # Check for ROCm providers (MIGraphX or ROCM)
+            available = get_available_providers()
+            if config.get("use_cuda", False) or config.get("use_rocm", False):
+                if "MIGraphXExecutionProvider" in available:
+                    EP_list.append(("MIGraphXExecutionProvider", {"device_id": 0}))
+                    print(f"  → Using MIGraphXExecutionProvider (AMD ROCm GPU)")
+                elif "ROCMExecutionProvider" in available:
+                    EP_list.append(("ROCMExecutionProvider", {"device_id": 0}))
+                    print(f"  → Using ROCMExecutionProvider (AMD ROCm GPU)")
+                elif "CUDAExecutionProvider" in available:
+                    cuda_provider_options = {
+                        "device_id": 0,
+                        "arena_extend_strategy": "kNextPowerOfTwo",
+                        "cudnn_conv_algo_search": "EXHAUSTIVE",
+                        "do_copy_in_default_stream": True,
+                    }
+                    EP_list.append(("CUDAExecutionProvider", cuda_provider_options))
+
+            EP_list.append((cpu_ep, cpu_provider_options))
+
+            self._verify_model(config["model_path"])
+            self.session = InferenceSession(config["model_path"], sess_options=sess_opt, providers=EP_list)
+
+            active_providers = self.session.get_providers()
+            if active_providers and active_providers[0] != cpu_ep:
+                print(f"  → Active provider: {active_providers[0]}")
+
+        rapid_utils.OrtInferSession.__init__ = _patched_init
+        return True
+    except Exception as e:
+        print(f"Warning: Failed to patch RapidOCR for ROCm: {e}", file=sys.stderr)
+        return False
 
 
 class PerformanceManager:
@@ -234,9 +306,22 @@ class OCRDaemon:
         print("Initializing RapidOCR engine...")
         start = time.time()
 
-        # Initialize with GPU if configured (experimental on AMD)
         use_gpu = self.config.get("use_gpu", False)
-        self.ocr_engine = RapidOCR(use_cuda=use_gpu)
+        provider = self.config.get("provider", "cpu-ort")
+
+        # Apply ROCm patch if GPU requested and ROCm is available
+        rocm_patched = False
+        if use_gpu or provider == "gpu-rocm":
+            if _ROCM_AVAILABLE:
+                rocm_patched = _patch_rapidocr_for_rocm()
+                if rocm_patched:
+                    print(f"ROCm support enabled ({_ROCM_PROVIDER})")
+            else:
+                print("Warning: GPU requested but ROCm not available, using CPU")
+
+        # Initialize RapidOCR - use_cuda triggers GPU path (now patched for ROCm)
+        self.ocr_engine = RapidOCR(use_cuda=use_gpu or rocm_patched)
+        self.stats["provider"] = _ROCM_PROVIDER if rocm_patched else "CPUExecutionProvider"
 
         # Warm-up: run inference on a tiny image to initialize ONNX graph
         if self.config.get("warm_start", True):
@@ -401,7 +486,12 @@ class OCRDaemon:
         if self.ocr_engine is None:
             raise RuntimeError("OCR engine not initialised")
 
-        dt_boxes, det_elapsed = self.ocr_engine.text_detector(img_array)
+        # RapidOCR 1.4.x uses text_det, older versions use text_detector
+        text_det = getattr(self.ocr_engine, "text_det", None) or getattr(self.ocr_engine, "text_detector", None)
+        if text_det is None:
+            raise RuntimeError("OCR engine has no text detection method")
+
+        dt_boxes, det_elapsed = text_det(img_array)
 
         if dt_boxes is None or len(dt_boxes) == 0:
             return [], [], det_elapsed
@@ -428,10 +518,18 @@ class OCRDaemon:
             raise RuntimeError("OCR engine not initialised")
 
         images: list[np.ndarray] = [crop_img]
-        if self.ocr_engine.use_angle_cls:
+
+        # RapidOCR 1.4.x uses use_cls, older versions use use_angle_cls
+        use_cls = getattr(self.ocr_engine, "use_cls", None) or getattr(self.ocr_engine, "use_angle_cls", False)
+        if use_cls:
             images, _cls_res, _cls_time = self.ocr_engine.text_cls(images)
 
-        rec_res, _rec_time = self.ocr_engine.text_recognizer(images)
+        # RapidOCR 1.4.x uses text_rec, older versions use text_recognizer
+        text_rec = getattr(self.ocr_engine, "text_rec", None) or getattr(self.ocr_engine, "text_recognizer", None)
+        if text_rec is None:
+            raise RuntimeError("OCR engine has no text recognition method")
+
+        rec_res, _rec_time = text_rec(images)
         if not rec_res:
             return "", 0.0
 
