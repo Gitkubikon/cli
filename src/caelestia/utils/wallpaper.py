@@ -172,6 +172,9 @@ def get_colours_for_wall(wall: Path | str, no_smart: bool) -> dict:
     scheme = get_scheme()
     cache = wallpapers_cache_dir / compute_hash(wall)
 
+    if wall.suffix.lower() == ".gif":
+        wall = convert_gif(wall)
+
     name = "dynamic"
 
     if not no_smart:
@@ -179,7 +182,7 @@ def get_colours_for_wall(wall: Path | str, no_smart: bool) -> dict:
         scheme = Scheme(
             {
                 "name": name,
-                "flavour": "default",
+                "flavour": scheme.flavour,
                 "mode": smart_opts["mode"],
                 "variant": smart_opts["variant"],
                 "colours": scheme.colours,
@@ -188,11 +191,29 @@ def get_colours_for_wall(wall: Path | str, no_smart: bool) -> dict:
 
     return {
         "name": name,
-        "flavour": "default",
+        "flavour": scheme.flavour,
         "mode": scheme.mode,
         "variant": scheme.variant,
         "colours": get_colours_for_image(get_thumb(wall, cache), scheme),
     }
+
+def convert_gif(wall: Path) -> Path:
+    cache = wallpapers_cache_dir / compute_hash(wall)
+    output_path = cache / "first_frame.png"
+
+    if not output_path.exists():
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with Image.open(wall) as img:
+            try:
+                img.seek(0)
+            except EOFError:
+                pass
+
+            img = img.convert("RGB")
+            img.save(output_path, "PNG")
+
+    return output_path
+
 
 
 def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
@@ -202,6 +223,9 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
     if not is_valid_image(wall):
         raise ValueError(f'"{wall}" is not a valid image')
 
+    # Use gif's 1st frame for thumb only
+    wall_cache = convert_gif(wall) if wall.suffix.lower() == ".gif" else wall
+
     # Update files
     wallpaper_path_path.parent.mkdir(parents=True, exist_ok=True)
     wallpaper_path_path.write_text(str(wall))
@@ -209,7 +233,7 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
     wallpaper_link_path.unlink(missing_ok=True)
     wallpaper_link_path.symlink_to(wall)
 
-    cache = wallpapers_cache_dir / compute_hash(wall)
+    cache = wallpapers_cache_dir / compute_hash(wall_cache)
 
     metadata = _read_animated_metadata(cache)
     if not metadata:
@@ -219,7 +243,7 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
             _write_animated_metadata(cache, metadata)
 
     # Generate thumbnail or get from cache
-    thumb = get_thumb(wall, cache)
+    thumb = get_thumb(wall_cache, cache)
     wallpaper_thumbnail_path.parent.mkdir(parents=True, exist_ok=True)
     wallpaper_thumbnail_path.unlink(missing_ok=True)
     wallpaper_thumbnail_path.symlink_to(thumb)
@@ -228,7 +252,7 @@ def set_wallpaper(wall: Path | str, no_smart: bool) -> None:
 
     # Change mode and variant based on wallpaper colour
     if scheme.name == "dynamic" and not no_smart:
-        smart_opts = get_smart_opts(wall, cache)
+        smart_opts = get_smart_opts(wall_cache, cache)
         scheme.mode = smart_opts["mode"]
         scheme.variant = smart_opts["variant"]
 
