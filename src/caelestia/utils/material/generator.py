@@ -1,6 +1,5 @@
 from materialyoucolor.blend import Blend
-from materialyoucolor.dynamiccolor.dynamic_scheme import DynamicScheme
-from materialyoucolor.dynamiccolor.material_dynamic_colors import MaterialDynamicColors
+from materialyoucolor.dynamiccolor.material_dynamic_colors import DynamicScheme, MaterialDynamicColors
 from materialyoucolor.hct import Hct
 from materialyoucolor.scheme.scheme_content import SchemeContent
 from materialyoucolor.scheme.scheme_expressive import SchemeExpressive

@@ -1,6 +1,7 @@
 import configparser
 import io
 import json
+import os
 import re
 import shutil
 import fcntl
@@ -450,6 +451,60 @@ def apply_zathura(colours: dict[str, str]) -> None:
 
 
 @log_exception
+def apply_onlyoffice(colours: dict[str, str], mode: str) -> None:
+    logo_type = "light" if mode == "dark" else "dark"
+    inverted_filter = "invert(1)" if mode == "dark" else "none"
+    template = gen_replace(colours, templates_dir / "onlyoffice.json", hash=True)
+    template = template.replace('"{{ $mode }}"', f'"{mode}"')
+    template = template.replace('"{{ $logo_type }}"', f'"{logo_type}"')
+    template = template.replace('"{{ $inverted_filter }}"', f'"{inverted_filter}"')
+
+    # User themes dir (start page)
+    user_themes_dir = data_dir / "onlyoffice/desktopeditors/uithemes"
+    user_themes_dir.mkdir(parents=True, exist_ok=True)
+    (user_themes_dir / "theme-caelestia.json").write_text(template)
+
+    # System themes dir (editor views)
+    sys_themes_dir = Path("/opt/onlyoffice/desktopeditors/editors/web-apps/apps/common/main/resources/themes")
+    if not sys_themes_dir.exists():
+        return
+
+    try:
+        (sys_themes_dir / "theme-caelestia.json").write_text(template)
+    except PermissionError:
+        return
+
+    # Generate CSS override with higher specificity than :root .theme-type-dark (0,2,0)
+    # Using :root body.theme-caelestia (0,2,1) ensures our colors win
+    theme_data = json.loads(template)
+    css_vars = "; ".join(f"--{k}: {v}" for k, v in theme_data["colors"].items())
+    css = f":root body.theme-caelestia {{ {css_vars} }}"
+    try:
+        (sys_themes_dir / "theme-caelestia.css").write_text(css)
+    except PermissionError:
+        return
+
+    # Inject <link> to CSS override in each editor's index.html (idempotent)
+    editors_base = sys_themes_dir.parents[3]  # .../apps/
+    link_tag = '<link rel="stylesheet" href="../../common/main/resources/themes/theme-caelestia.css">'
+    for editor_path in (
+        "documenteditor/main", "documenteditor/forms",
+        "spreadsheeteditor/main", "presentationeditor/main",
+        "pdfeditor/main", "visioeditor/main",
+    ):
+        index_path = editors_base / editor_path / "index.html"
+        if not index_path.exists():
+            continue
+        try:
+            content = index_path.read_text()
+            if "theme-caelestia.css" not in content:
+                content = content.replace("</head>", f"{link_tag}\n</head>")
+                index_path.write_text(content)
+        except PermissionError:
+            pass
+
+
+@log_exception
 def apply_zen_browser(colours: dict[str, str]) -> None:
     template = gen_replace(colours, templates_dir / "userContent.css", hash=True)
     write_file(theme_dir / "userContent.css", template)
@@ -520,6 +575,8 @@ def apply_colours(colours: dict[str, str], mode: str) -> None:
                 apply_zathura(colours)
             if check("enableZenBrowser"):
                 apply_zen_browser(colours)
+            if check("enableOnlyoffice"):
+                apply_onlyoffice(colours, mode)
             apply_user_templates(colours, mode)
 
     finally:
