@@ -28,24 +28,27 @@ The main control script for the Caelestia dotfiles.
 
 <details><summary id="optional-dependencies">Optional dependencies</summary>
 
--   [`papirus-folders`](https://github.com/PapirusDevelopmentTeam/papirus-folders) - automatic folder icon color syncing with theme
+- [`papirus-folders`](https://github.com/PapirusDevelopmentTeam/papirus-folders) - automatic folder icon color syncing with theme
 
 > [!NOTE]
 > For automatic Papirus folder icon color syncing, `papirus-folders` needs to be able to run with `sudo` without a password prompt.
-> 
+>
 > **Recommended** - Create a sudoers file:
+>
 > ```fish
 > # Fish shell
 > echo "$USER ALL=(ALL) NOPASSWD: "(which papirus-folders) | sudo tee /etc/sudoers.d/papirus-folders
 > sudo chmod 440 /etc/sudoers.d/papirus-folders
 > ```
+>
 > ```sh
 > # Bash/other shells
 > echo "$USER ALL=(ALL) NOPASSWD: $(which papirus-folders)" | sudo tee /etc/sudoers.d/papirus-folders
 > sudo chmod 440 /etc/sudoers.d/papirus-folders
 > ```
-> 
+>
 > **Alternatively** - Edit the main sudoers file by running `sudo visudo` and adding at the end:
+>
 > ```
 > your_username ALL=(ALL) NOPASSWD: /usr/bin/papirus-folders
 > ```
@@ -156,6 +159,24 @@ subcommands:
     resizer      window resizer daemon
     clicktodo    OCR-based click-to-copy from screen
 ```
+
+### User Templates
+
+Custom user templates can be defined in `~/.config/caelestia/templates/`.
+
+#### Template syntax
+
+`{{ <color>.<format> }}`
+
+- `<color>` is a theme color role derived from the Material You color system (e.g. `primary`, `secondary`, `background`)
+- `<format>` is the output format: `hex` or `rgb`
+
+#### Examples
+
+- `{{ primary.hex }}` outputs `3f4ba2`
+- `{{ primary.rgb }}` outputs `rgb(193, 132, 207)`
+
+Output files are written to `~/.local/state/caelestia/theme/`. You can symlink them to your desired locations.
 
 ### OCR Click-to-Copy (`clicktodo`)
 
@@ -302,84 +323,65 @@ All configuration options are in `~/.config/caelestia/cli.json`.
 
 ```json
 {
-	"record": {
-		"extraArgs": []
-	},
-	"wallpaper": {
-		"postHook": "echo $WALLPAPER_PATH"
-	},
-	"theme": {
-		"enableTerm": true,
-		"enableHypr": true,
-		"enableDiscord": true,
-		"enableSpicetify": true,
-		"enableFuzzel": true,
-		"enableBtop": true,
-		"enableGtk": true,
-		"enableQt": true
-	},
-	"toggles": {
-		"communication": {
-			"discord": {
-				"enable": true,
-				"match": [{ "class": "discord" }],
-				"command": ["discord"],
-				"move": true
-			},
-			"whatsapp": {
-				"enable": true,
-				"match": [{ "class": "whatsapp" }],
-				"move": true
-			}
-		},
-		"music": {
-			"spotify": {
-				"enable": true,
-				"match": [
-					{ "class": "Spotify" },
-					{ "initialTitle": "Spotify" },
-					{ "initialTitle": "Spotify Free" }
-				],
-				"command": ["spicetify", "watch", "-s"],
-				"move": true
-			},
-			"feishin": {
-				"enable": true,
-				"match": [{ "class": "feishin" }],
-				"move": true
-			}
-		},
-		"sysmon": {
-			"btop": {
-				"enable": true,
-				"match": [
-					{
-						"class": "btop",
-						"title": "btop",
-						"workspace": { "name": "special:sysmon" }
-					}
-				],
-				"command": [
-					"foot",
-					"-a",
-					"btop",
-					"-T",
-					"btop",
-					"fish",
-					"-C",
-					"exec btop"
-				]
-			}
-		},
-		"todo": {
-			"todoist": {
-				"enable": true,
-				"match": [{ "class": "Todoist" }],
-				"command": ["todoist"],
-				"move": true
-			}
-		}
-	}
+    "record": {
+        "extraArgs": []
+    },
+    "wallpaper": {
+        "postHook": "echo $WALLPAPER_PATH"
+    },
+    "theme": {
+        "enableTerm": true,
+        "enableHypr": true,
+        "enableDiscord": true,
+        "enableSpicetify": true,
+        "enableFuzzel": true,
+        "enableBtop": true,
+        "enableGtk": true,
+        "enableQt": true
+    },
+    "toggles": {
+        "communication": {
+            "discord": {
+                "enable": true,
+                "match": [{ "class": "discord" }],
+                "command": ["discord"],
+                "move": true
+            },
+            "whatsapp": {
+                "enable": true,
+                "match": [{ "class": "whatsapp" }],
+                "move": true
+            }
+        },
+        "music": {
+            "spotify": {
+                "enable": true,
+                "match": [{ "class": "Spotify" }, { "initialTitle": "Spotify" }, { "initialTitle": "Spotify Free" }],
+                "command": ["spicetify", "watch", "-s"],
+                "move": true
+            },
+            "feishin": {
+                "enable": true,
+                "match": [{ "class": "feishin" }],
+                "move": true
+            }
+        },
+        "sysmon": {
+            "btop": {
+                "enable": true,
+                "match": [{ "class": "btop", "title": "btop", "workspace": { "name": "special:sysmon" } }],
+                "command": ["foot", "-a", "btop", "-T", "btop", "fish", "-C", "exec btop"]
+            }
+        },
+        "todo": {
+            "todoist": {
+                "enable": true,
+                "match": [{ "class": "Todoist" }],
+                "command": ["todoist"],
+                "move": true
+            }
+        }
+    }
 }
 ```
 
